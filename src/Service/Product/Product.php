@@ -5,6 +5,9 @@ declare(strict_types = 1);
 namespace Service\Product;
 
 use Model;
+use Service\Product\SortingOptions\Interfaces\IComparator;
+use Service\Product\SortingOptions\NameComparator;
+use Service\Product\SortingOptions\PriceComparator;
 
 class Product
 {
@@ -35,6 +38,11 @@ class Product
         // $sortType === 'price'; // Сортировка по цене
         // $sortType === 'name'; // Сортировка по имени
 
+        if ($sortType === 'price') {
+            $productList = $this->sort(new PriceComparator(), $productList);
+        } elseif ($sortType === 'name'){
+            $productList = $this->sort(new NameComparator(), $productList);
+        }
         return $productList;
     }
 
@@ -46,5 +54,17 @@ class Product
     protected function getProductRepository(): Model\Repository\Product
     {
         return new Model\Repository\Product();
+    }
+
+    /**
+     * Запускает сортировку товаров
+     *
+     * @param IComparator $comparator
+     * @param array $products
+     * @return array
+     */
+    protected function sort(IComparator $comparator, array $products)
+    {
+        return $comparator->compare($products);
     }
 }
