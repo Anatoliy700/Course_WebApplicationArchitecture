@@ -5,17 +5,11 @@ declare(strict_types = 1);
 namespace Service\Order;
 
 use Model;
-use Service\Billing\Card;
-use Service\Billing\IBilling;
-use Service\Communication\Email;
-use Service\Communication\ICommunication;
-use Service\Discount\IDiscount;
-use Service\Discount\NullObject;
-use Service\User\ISecurity;
-use Service\User\Security;
+use Model\Repository\Interfaces\IBasket;
+use Service\Commands\Interfaces\IBasketCheckout;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
-class Basket
+class Basket implements IBasketCheckout
 {
     /**
      * Сессионный ключ списка всех продуктов корзины
@@ -25,14 +19,37 @@ class Basket
     /**
      * @var SessionInterface
      */
-    private $session;
+    private $repository;
 
     /**
-     * @param SessionInterface $session
+     *
+     * @var array
      */
-    public function __construct(SessionInterface $session)
+    private $productIds;
+
+    /**
+     * @param IBasket $repository
+     */
+    public function __construct(IBasket $repository)
     {
-        $this->session = $session;
+        $this->repository = $repository;
+        $this->getBasket();
+    }
+
+    /**
+     * Получаем корзину из репозитория
+     */
+    private function getBasket()
+    {
+        $this->productIds = $this->repository->get(static::BASKET_DATA_KEY, []);
+    }
+
+    /**
+     * Сохраняет корзину в репозитории
+     */
+    private function saveBasket()
+    {
+        $this->repository->save($this->productIds);
     }
 
     /**
@@ -44,10 +61,9 @@ class Basket
      */
     public function addProduct(int $product): void
     {
-        $basket = $this->session->get(static::BASKET_DATA_KEY, []);
-        if (!in_array($product, $basket, true)) {
-            $basket[] = $product;
-            $this->session->set(static::BASKET_DATA_KEY, $basket);
+        if (!$this->isProductInBasket($product)) {
+            $this->productIds[] = $product;
+            $this->saveBasket();
         }
     }
 
@@ -60,7 +76,7 @@ class Basket
      */
     public function isProductInBasket(int $productId): bool
     {
-        return in_array($productId, $this->getProductIds(), true);
+        return in_array($productId, $this->productIds, true);
     }
 
     /**
@@ -70,58 +86,7 @@ class Basket
      */
     public function getProductsInfo(): array
     {
-        $productIds = $this->getProductIds();
-        return $this->getProductRepository()->search($productIds);
-    }
-
-    /**
-     * Оформление заказа
-     *
-     * @return void
-     */
-    public function checkout(): void
-    {
-        // Здесь должна быть некоторая логика выбора способа платежа
-        $billing = new Card();
-
-        // Здесь должна быть некоторая логика получения информации о скидки пользователя
-        $discount = new NullObject();
-
-        // Здесь должна быть некоторая логика получения способа уведомления пользователя о покупке
-        $communication = new Email();
-
-        $security = new Security($this->session);
-
-        $this->checkoutProcess($discount, $billing, $security, $communication);
-    }
-
-    /**
-     * Проведение всех этапов заказа
-     *
-     * @param IDiscount $discount,
-     * @param IBilling $billing,
-     * @param ISecurity $security,
-     * @param ICommunication $communication
-     * @return void
-     */
-    public function checkoutProcess(
-        IDiscount $discount,
-        IBilling $billing,
-        ISecurity $security,
-        ICommunication $communication
-    ): void {
-        $totalPrice = 0;
-        foreach ($this->getProductsInfo() as $product) {
-            $totalPrice += $product->getPrice();
-        }
-
-        $discount = $discount->getDiscount();
-        $totalPrice = $totalPrice - $totalPrice / 100 * $discount;
-
-        $billing->pay($totalPrice);
-
-        $user = $security->getUser();
-        $communication->process($user, 'checkout_template');
+        return $this->getProductRepository()->search($this->productIds);
     }
 
     /**
@@ -135,12 +100,16 @@ class Basket
     }
 
     /**
-     * Получаем список id товаров корзины
+     * Расчитываем общую стоимость товаров в корзине
      *
-     * @return array
+     * @return float
      */
-    private function getProductIds(): array
+    public function getTotalPrice(): float
     {
-        return $this->session->get(static::BASKET_DATA_KEY, []);
+        $totalPrice = 0;
+        foreach ($this->getProductsInfo() as $product) {
+            $totalPrice += $product->getPrice();
+        }
+        return $totalPrice;
     }
 }
