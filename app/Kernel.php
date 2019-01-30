@@ -15,13 +15,17 @@ use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
+use Framework\Commands\RegistrationCommand;
+use Framework\Commands\Receivers\RegistrationConfigs;
+use Framework\Commands\RegistrationInvoker;
+use Framework\Commands\Receivers\RegistrationRoutes;
 
 class Kernel
 {
     /**
      * @var RouteCollection
      */
-    protected $routeCollection;
+    //protected $routeCollection;
 
     /**
      * @var ContainerBuilder
@@ -39,8 +43,25 @@ class Kernel
      */
     public function handle(Request $request): Response
     {
-        $this->registerConfigs();
-        $this->registerRoutes();
+        $registryConfig = new RegistrationCommand(
+            new RegistrationConfigs(
+                $this->containerBuilder,
+                __DIR__ . DIRECTORY_SEPARATOR . 'config',
+                'parameters.php'
+            )
+        );
+        (new RegistrationInvoker($registryConfig))->register();
+
+        $registryRoutes = new RegistrationCommand(
+            new RegistrationRoutes(
+                $this->containerBuilder,
+                __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'routing.php'
+            )
+        );
+        (new RegistrationInvoker($registryRoutes))->register();
+
+        //$this->registerConfigs();
+        //$this->registerRoutes();
 
         return $this->process($request);
     }
@@ -48,25 +69,25 @@ class Kernel
     /**
      * @return void
      */
-    protected function registerConfigs(): void
-    {
-        try {
-            $fileLocator = new FileLocator(__DIR__ . DIRECTORY_SEPARATOR . 'config');
-            $loader = new PhpFileLoader($this->containerBuilder, $fileLocator);
-            $loader->load('parameters.php');
-        } catch (\Throwable $e) {
-            die('Cannot read the config file. File: ' . __FILE__ . '. Line: ' . __LINE__);
-        }
-    }
+    /*    protected function registerConfigs(): void
+        {
+            try {
+                $fileLocator = new FileLocator(__DIR__ . DIRECTORY_SEPARATOR . 'config');
+                $loader = new PhpFileLoader($this->containerBuilder, $fileLocator);
+                $loader->load('parameters.php');
+            } catch (\Throwable $e) {
+                die('Cannot read the config file. File: ' . __FILE__ . '. Line: ' . __LINE__);
+            }
+        }*/
 
     /**
      * @return void
      */
-    protected function registerRoutes(): void
-    {
-        $this->routeCollection = require __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'routing.php';
-        $this->containerBuilder->set('route_collection', $this->routeCollection);
-    }
+    /*    protected function registerRoutes(): void
+        {
+            $this->routeCollection = require __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'routing.php';
+            $this->containerBuilder->set('route_collection', $this->routeCollection);
+        }*/
 
     /**
      * @param Request $request
@@ -74,7 +95,8 @@ class Kernel
      */
     protected function process(Request $request): Response
     {
-        $matcher = new UrlMatcher($this->routeCollection, new RequestContext());
+        //$matcher = new UrlMatcher($this->routeCollection, new RequestContext());
+        $matcher = new UrlMatcher($this->containerBuilder->get('route_collection'), new RequestContext());
         $matcher->getContext()->fromRequest($request);
 
         try {
