@@ -16,11 +16,15 @@ class RegistrationConfigs implements IRegistryReceiver
     private $container;
 
     /**
+     * Директория с файлом конфигурации
+     *
      * @var string
      */
     private $configDir;
 
     /**
+     * Имя файла конфигурации
+     *
      * @var string
      */
     private $resource;
@@ -28,8 +32,8 @@ class RegistrationConfigs implements IRegistryReceiver
     /**
      * RegistrationConfigs constructor.
      * @param ContainerBuilder $container
-     * @param $configDir
-     * @param $resource
+     * @param $configDir string Директория с файлом конфигурации
+     * @param $resource string Имя файла конфигурации
      */
     public function __construct(ContainerBuilder $container, $configDir, $resource)
     {
