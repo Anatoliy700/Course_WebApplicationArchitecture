@@ -5,7 +5,10 @@ declare(strict_types = 1);
 namespace Controller;
 
 use Framework\Render;
+use Model\Repository\BasketSession;
+use Service\Commands\CheckoutProcess;
 use Service\Order\Basket;
+use Service\Order\Checkout;
 use Service\User\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,7 +29,7 @@ class OrderController
             return $this->redirect('order_checkout');
         }
 
-        $productList = (new Basket($request->getSession()))->getProductsInfo();
+        $productList = (new Basket(new BasketSession($request->getSession())))->getProductsInfo();
         $isLogged = (new Security($request->getSession()))->isLogged();
 
         return $this->render('order/info.html.php', ['productList' => $productList, 'isLogged' => $isLogged]);
@@ -45,7 +48,11 @@ class OrderController
             return $this->redirect('user_authentication');
         }
 
-        (new Basket($request->getSession()))->checkout();
+        (new Checkout(
+            new Security($request->getSession()),
+            new Basket(new BasketSession($request->getSession())),
+            new CheckoutProcess()
+        ))->execute();
 
         return $this->render('order/checkout.html.php');
     }

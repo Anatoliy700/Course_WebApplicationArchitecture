@@ -30,6 +30,7 @@
     },
     "config": {
         "bin-dir": "bin",
-        "sort-packages": true
+        "sort-packages": true,
+        "process-timeout":0
     }
 }
