@@ -68,4 +68,35 @@ class Product
             'price' => $this->price,
         ];
     }
+
+    /**
+     * @param int $id
+     * @return Product
+     */
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @param string $name
+     * @return Product
+     */
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @param float $price
+     * @return Product
+     */
+    public function setPrice(float $price): self
+    {
+        $this->price = $price;
+        return $this;
+    }
+
 }
