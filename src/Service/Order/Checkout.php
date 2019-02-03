@@ -5,32 +5,34 @@ namespace Service\Order;
 
 use Service\Billing\Card;
 use Service\Commands\Interfaces\IBasketCheckout;
-use Service\Commands\Interfaces\ICheckout;
 use Service\Communication\Email;
 use Service\Discount\NullObject;
 use Service\User\ISecurity;
 
 class Checkout
 {
+    /**
+     * @var IBasketCheckout
+     */
     private $basket;
+
+    /**
+     * @var ISecurity
+     */
     private $security;
-    private $command;
 
     /**
      * Checkout constructor.
      * @param ISecurity $security
      * @param IBasketCheckout $basket
-     * @param ICheckout $command
      */
     public function __construct(
         ISecurity $security,
-        IBasketCheckout $basket,
-        ICheckout $command
+        IBasketCheckout $basket
     )
     {
         $this->basket = $basket;
         $this->security = $security;
-        $this->command = $command;
     }
 
     /**
@@ -38,21 +40,23 @@ class Checkout
      */
     public function execute()
     {
+        $builder = new CheckoutProcessBuilder();
+
         // Здесь должна быть некоторая логика выбора способа платежа
-        $billing = new Card();
+        $builder->setBilling(new Card());
 
         // Здесь должна быть некоторая логика получения информации о скидки пользователя
-        $discount = new NullObject();
+        $builder->setDiscount(new NullObject());
 
         // Здесь должна быть некоторая логика получения способа уведомления пользователя о покупке
-        $communication = new Email();
+        $builder->setCommunication(new Email());
 
-        $this->command->checkout(
-            $this->security,
-            $this->basket,
-            $billing,
-            $discount,
-            $communication
-        );
+        $builder->setBasket($this->basket);
+
+        $builder->setSecurity($this->security);
+
+        $checkoutProcessCommand = $builder->build();
+
+        $checkoutProcessCommand->checkout();
     }
 }

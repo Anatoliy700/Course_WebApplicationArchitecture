@@ -6,7 +6,6 @@ namespace Controller;
 
 use Framework\Render;
 use Model\Repository\BasketSession;
-use Service\Commands\CheckoutProcess;
 use Service\Order\Basket;
 use Service\Order\Checkout;
 use Service\User\Security;
@@ -50,8 +49,7 @@ class OrderController
 
         (new Checkout(
             new Security($request->getSession()),
-            new Basket(new BasketSession($request->getSession())),
-            new CheckoutProcess()
+            new Basket(new BasketSession($request->getSession()))
         ))->execute();
 
         return $this->render('order/checkout.html.php');

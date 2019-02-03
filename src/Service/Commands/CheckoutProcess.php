@@ -8,38 +8,65 @@ use Service\Commands\Interfaces\IBasketCheckout;
 use Service\Commands\Interfaces\ICheckout;
 use Service\Communication\ICommunication;
 use Service\Discount\IDiscount;
+use Service\Order\CheckoutProcessBuilder;
 use Service\User\ISecurity;
 
 class CheckoutProcess implements ICheckout
 {
     /**
-     * Проведение всех этапов заказа
-     *
-     * @param IDiscount $discount
-     * @param IBilling $billing
-     * @param ISecurity $security
-     * @param ICommunication $communication
-     * @param IBasketCheckout $basket
+     * @var ISecurity
+     */
+    private $security;
+
+    /**
+     * @var IBasketCheckout
+     */
+    private $basket;
+
+    /**
+     * @var IBilling
+     */
+    private $billing;
+
+    /**
+     * @var IDiscount
+     */
+    private $discount;
+
+    /**
+     * @var ICommunication
+     */
+    private $communication;
+
+    /**
+     * CheckoutProcess constructor.
+     * @param CheckoutProcessBuilder $builder
+     */
+    public function __construct(CheckoutProcessBuilder $builder)
+    {
+        $this->security = $builder->getSecurity();
+        $this->basket = $builder->getBasket();
+        $this->billing = $builder->getBilling();
+        $this->discount = $builder->getDiscount();
+        $this->communication = $builder->getCommunication();
+    }
+
+
+    /**
      * @throws \Service\Billing\Exception\BillingException
      * @throws \Service\Communication\Exception\CommunicationException
      */
-    public function checkout(
-        ISecurity $security,
-        IBasketCheckout $basket,
-        IBilling $billing,
-        IDiscount $discount,
-        ICommunication $communication
-    )
+    public function checkout()
     {
-        $totalPrice = $basket->getTotalPrice();
+        $totalPrice = $this->basket->getTotalPrice();
 
-        $discount = $discount->getDiscount();
+        $discount = $this->discount->getDiscount();
         $totalPrice = $totalPrice - $totalPrice / 100 * $discount;
 
-        $billing->pay($totalPrice);
+        $this->billing->pay($totalPrice);
 
-        $user = $security->getUser();
-        $communication->process($user, 'checkout_template');
+        $user = $this->security->getUser();
+        $this->communication->process($user, 'checkout_template');
     }
 
 }
