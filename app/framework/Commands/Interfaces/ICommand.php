@@ -10,5 +10,5 @@ namespace Framework\Commands\Interfaces;
  */
 interface ICommand
 {
-    public function execute(): void;
+    public function execute(array $params): array;
 }

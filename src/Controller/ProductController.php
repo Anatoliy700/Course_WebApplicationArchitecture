@@ -5,8 +5,6 @@ declare(strict_types = 1);
 namespace Controller;
 
 use Framework\Render;
-use Model\Repository\BasketSession;
-use Service\Order\Basket;
 use Service\Product\Product;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,12 +17,13 @@ class ProductController
      * Информация о продукте
      *
      * @param Request $request
-     * @param string $id
+     * @param $id
      * @return Response
+     * @throws \Exception
      */
     public function infoAction(Request $request, $id): Response
     {
-        $basket = (new Basket(new BasketSession($request->getSession())));
+        $basket = (\Kernel::$container->get('order.basket'));
 
         if ($request->isMethod(Request::METHOD_POST)) {
             $basket->addProduct((int)$request->request->get('product'));

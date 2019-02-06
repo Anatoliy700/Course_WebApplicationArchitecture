@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Controller;
 
 use Framework\Render;
-use Service\User\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -18,11 +17,12 @@ class UserController
      *
      * @param Request $request
      * @return Response
+     * @throws \Exception
      */
     public function authenticationAction(Request $request): Response
     {
         if ($request->isMethod(Request::METHOD_POST)) {
-            $user = new Security($request->getSession());
+            $user = \Kernel::$container->get('user.security');
 
             $isAuthenticationSuccess = $user->authentication(
                 $request->request->get('login'),
@@ -42,12 +42,12 @@ class UserController
     /**
      * Выходим из системы
      *
-     * @param Request $request
      * @return Response
+     * @throws \Exception
      */
-    public function logoutAction(Request $request): Response
+    public function logoutAction(): Response
     {
-        (new Security($request->getSession()))->logout();
+        \Kernel::$container->get('user.security')->logout();
 
         return $this->redirect('index');
     }
