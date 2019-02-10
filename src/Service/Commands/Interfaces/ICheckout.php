@@ -10,11 +10,5 @@ use Service\User\ISecurity;
 
 interface ICheckout
 {
-    public function checkout(
-        ISecurity $security,
-        IBasketCheckout $basket,
-        IBilling $billing,
-        IDiscount $discount,
-        ICommunication $communication
-    );
+    public function checkout();
 }
