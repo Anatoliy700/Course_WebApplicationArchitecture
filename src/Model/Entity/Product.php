@@ -22,15 +22,10 @@ class Product
     private $price;
 
     /**
-     * @param int $id
-     * @param string $name
-     * @param float $price
+     * Логика клонирования
      */
-    public function __construct(int $id, string $name, float $price)
+    public function __clone()
     {
-        $this->id = $id;
-        $this->name = $name;
-        $this->price = $price;
     }
 
     /**

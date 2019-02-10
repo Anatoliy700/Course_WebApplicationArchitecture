@@ -20,9 +20,13 @@ class Product
             return [];
         }
 
+        $productPrototype = new Entity\Product();
         $productList = [];
         foreach ($this->getDataFromSource(['id' => $ids]) as $item) {
-            $productList[] = $this->createProduct($item, $productList[0] ?? null);
+            $productList[] = clone $productPrototype
+                ->setId($item['id'])
+                ->setName($item['name'])
+                ->setPrice($item['price']);
         }
 
         return $productList;
@@ -35,31 +39,16 @@ class Product
      */
     public function fetchAll(): array
     {
+        $productPrototype = new Entity\Product();
         $productList = [];
         foreach ($this->getDataFromSource() as $item) {
-            $productList[] = $this->createProduct($item, $productList[0] ?? null);
+            $productList[] = clone $productPrototype
+                ->setId($item['id'])
+                ->setName($item['name'])
+                ->setPrice($item['price']);
         }
 
         return $productList;
-    }
-
-    /**
-     * @param $item array Массив с данными продукта
-     * @param Entity\Product|null $product
-     * @return Entity\Product
-     */
-    protected function createProduct($item, ?Entity\Product $product = null)
-    {
-        if (null === $product) {
-            return new Entity\Product($item['id'], $item['name'], $item['price']);
-        }
-
-        $newProduct = clone $product;
-        $newProduct
-            ->setId($item['id'])
-            ->setName($item['name'])
-            ->setPrice($item['price']);
-        return $newProduct;
     }
 
     /**
