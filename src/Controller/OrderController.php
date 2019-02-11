@@ -44,7 +44,7 @@ class OrderController
             return $this->redirect('user_authentication');
         }
 
-        \Kernel::$container->get('order.checkout')->execute();
+        \Kernel::$container->get('order.checkout')->checkout();
 
         return $this->render('order/checkout.html.php');
     }
