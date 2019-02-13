@@ -1,9 +1,8 @@
 <?php
 
-namespace Framework\Commands;
+namespace Framework;
 
-use Framework\Commands\Interfaces\ICommand;
-use Framework\Registry;
+
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 use Symfony\Component\HttpKernel\Controller\ControllerResolver;
@@ -11,9 +10,11 @@ use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 
-class CommandProcess implements ICommand
+
+class ControllerFacade
 {
-    public function execute(array $params): array
+
+    public function getResponse(array $params)
     {
         $request = $params['request'];
 
@@ -38,8 +39,7 @@ class CommandProcess implements ICommand
 
             $response = new Response($error, Response::HTTP_INTERNAL_SERVER_ERROR);
         } finally {
-            $params['response'] = $response;
-            return $params;
+            return $response;
         }
     }
 }
