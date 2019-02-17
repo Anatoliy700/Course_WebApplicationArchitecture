@@ -2,12 +2,12 @@
 
 namespace Service\Order;
 
-
 use Service\Billing\Card;
 use Service\Commands\Interfaces\IBasketCheckout;
 use Service\Communication\Email;
 use Service\Discount\NullObject;
 use Service\User\ISecurity;
+
 
 class Checkout
 {
@@ -35,28 +35,22 @@ class Checkout
         $this->security = $security;
     }
 
-    /**
-     * Оформление заказа
-     */
-    public function execute()
+    public function checkout()
     {
-        $builder = new CheckoutProcessBuilder();
+        $checkout = new CheckoutFacade($this->security, $this->basket);
 
         // Здесь должна быть некоторая логика выбора способа платежа
-        $builder->setBilling(new Card());
+        $checkout->setBilling(new Card());
 
         // Здесь должна быть некоторая логика получения информации о скидки пользователя
-        $builder->setDiscount(new NullObject());
+        $checkout->setDiscount(new NullObject());
 
         // Здесь должна быть некоторая логика получения способа уведомления пользователя о покупке
-        $builder->setCommunication(new Email());
+        $checkout->setCommunication(new Email());
 
-        $builder->setBasket($this->basket);
-
-        $builder->setSecurity($this->security);
-
-        $checkoutProcessCommand = $builder->build();
-
-        $checkoutProcessCommand->checkout();
+        // Запуск процесса
+        $checkout->checkout();
     }
+
+
 }

@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-use Framework\Commands\CommandProcess;
 use Framework\Commands\CommandRegisterConfig;
 use Framework\Commands\CommandRegisterRoutes;
+use Framework\Commands\CommandRegisterServices;
+use Framework\ControllerFacade;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Framework\Commands\CommandRegisterServices;
 
 class Kernel
 {
@@ -48,8 +48,6 @@ class Kernel
 
         (new CommandRegisterServices())->execute($this->params);
 
-        $this->params = (new CommandProcess())->execute($this->params);
-
-        return $this->params['response'];
+        return (new ControllerFacade())->getResponse($this->params);
     }
 }
