@@ -17,6 +17,23 @@ class ProductRepository
     }
 
     /**
+     * Возвращает все ID продуктов
+     *
+     * @return array
+     */
+    public function getAllProductIds(): array
+    {
+        $ids = [];
+        $products = $this->getDataFromSource();
+
+        foreach ($products as $product) {
+            $ids[] = $product['id'];
+        }
+
+        return $ids;
+    }
+
+    /**
      * Получаем продукты из источника данных
      *
      * @param array $search

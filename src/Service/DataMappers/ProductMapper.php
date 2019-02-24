@@ -5,9 +5,15 @@ namespace Service\DataMappers;
 
 use Model\Entity\Product;
 use Model\Repository\ProductRepository;
+use Service\DbService\Exceptions\EmptyCacheException;
 
 class ProductMapper extends Mapper
 {
+    protected function getEntityClass(): string
+    {
+        return Product::class;
+    }
+
     /**
      * @param array $ids
      * @return array
@@ -15,23 +21,44 @@ class ProductMapper extends Mapper
      */
     public function search(array $ids): array
     {
-        $items = $this->adapter->find([
-            'class' => ProductRepository::class,
-            'params' => [
-                [
-                    'method' => 'find',
-                    'value' => $ids
-                ]
-            ]
-        ]);
+        $products = [];
+        $noCachedIds = [];
+        $noCachedProducts = [];
 
-
-        if (!$items) {
-            throw new \Exception('Продукты не найдены');
+        if (count($ids)) {
+            foreach ($ids as $id) {
+                try {
+                    $products[] = $this->getFromCache($id);
+                } catch (EmptyCacheException $e) {
+                    $noCachedIds[] = $id;
+                }
+            }
         }
 
-        return $this->createProducts($items);
+        if (count($noCachedIds)) {
+            $items = $this->adapter->find([
+                'class' => ProductRepository::class,
+                'params' => [
+                    [
+                        'method' => 'find',
+                        'value' => $noCachedIds
+                    ]
+                ]
+            ]);
 
+
+            if (!$items) {
+                throw new \Exception('Продукты не найдены');
+            }
+
+            $noCachedProducts = $this->createProducts($items);
+
+            foreach ($noCachedProducts as $product) {
+                $this->setInCache($product);
+            }
+        }
+
+        return array_merge($products, $noCachedProducts);
     }
 
     /**
@@ -40,22 +67,18 @@ class ProductMapper extends Mapper
      */
     public function fetchAll(): array
     {
-        $items = $this->adapter->find([
+        $productIds = $this->adapter->find([
             'class' => ProductRepository::class,
             'params' => [
                 [
-                    'method' => 'find',
+                    'method' => 'getAllProductIds',
                     'value' => []
                 ]
             ]
         ]);
-
-
-        if (!$items) {
-            throw new \Exception('Продукты не найдены');
+        if (count($productIds)) {
+            return $this->search($productIds);
         }
-
-        return $this->createProducts($items);
     }
 
     /**

@@ -6,9 +6,18 @@ namespace Service\DataMappers;
 use Exception;
 use Model\Entity\Role;
 use Model\Entity\User;
+use Service\DbService\Exceptions\EmptyCacheException;
 
 class UserMapper extends Mapper
 {
+    /**
+     * @return string
+     */
+    protected function getEntityClass(): string
+    {
+        return User::class;
+    }
+
     /**
      * @param int $id
      * @return User
@@ -16,21 +25,33 @@ class UserMapper extends Mapper
      */
     public function getById(int $id): User
     {
-        $data = $this->adapter->find([
-            'class' => \Model\Repository\UserRepository::class,
-            'params' => [
-                [
-                    'method' => 'getById',
-                    'value' => $id
+        try {
+
+            $user = $this->getFromCache($id);
+
+        } catch (EmptyCacheException $e) {
+
+            $data = $this->adapter->find([
+                'class' => \Model\Repository\UserRepository::class,
+                'params' => [
+                    [
+                        'method' => 'getById',
+                        'value' => $id
+                    ]
                 ]
-            ]
-        ]);
+            ]);
 
-        if (!$data) {
-            throw new Exception("Пользователь с ID {$id} не найден");
+            if (!$data) {
+                throw new Exception("Пользователь с ID {$id} не найден");
+            }
+
+            $user = $this->UserFactory($data);
+
+            $this->setInCache($user);
+
+        } finally {
+            return $user;
         }
-
-        return $this->UserFactory($data);
     }
 
     /**
@@ -40,21 +61,21 @@ class UserMapper extends Mapper
      */
     public function getByLogin(string $login): User
     {
-        $data = $this->adapter->find([
+        $userId = $this->adapter->find([
             'class' => \Model\Repository\UserRepository::class,
             'params' => [
                 [
-                    'method' => 'getByLogin',
+                    'method' => 'getIdByLogin',
                     'value' => $login
                 ]
             ]
         ]);
 
-        if (!$data) {
-            throw new Exception("Пользователь с Login {$login} не найден или не верный пароль");
+        if (!$userId) {
+            throw new Exception("Пользователь с Login {$login} не найден");
         }
 
-        return $this->UserFactory($data);
+        return $this->getById($userId[0]);
     }
 
     /**

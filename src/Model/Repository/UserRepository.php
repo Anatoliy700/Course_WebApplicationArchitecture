@@ -39,6 +39,13 @@ class UserRepository
         return null;
     }
 
+    public function getIdByLogin(string $login): ?array
+    {
+        $user = $this->getByLogin($login);
+
+        return $user ? array($user['id']) : null;
+    }
+
     /**
      * Получаем пользователей из источника данных
      *
