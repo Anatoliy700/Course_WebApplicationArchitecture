@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Service\Product;
 
 use Model;
+use Service\Adapters\RepositoryAdapter;
+use Service\DataMappers\ProductMapper;
 use Service\Product\SortingOptions\Interfaces\IComparator;
 use Service\Product\SortingOptions\NameComparator;
 use Service\Product\SortingOptions\PriceComparator;
@@ -19,7 +21,7 @@ class Product
      */
     public function getInfo(int $id): ?Model\Entity\Product
     {
-        $product = $this->getProductRepository()->search([$id]);
+        $product = static::getProductRepository()->search([$id]);
         return count($product) ? $product[0] : null;
     }
 
@@ -32,7 +34,7 @@ class Product
      */
     public function getAll(string $sortType): array
     {
-        $productList = $this->getProductRepository()->fetchAll();
+        $productList = static::getProductRepository()->fetchAll();
 
         // Применить паттерн Стратегия
         // $sortType === 'price'; // Сортировка по цене
@@ -47,13 +49,13 @@ class Product
     }
 
     /**
-     * Фабричный метод для репозитория Product
+     * Статический фабричный метод для репозитория Product
      *
-     * @return Model\Repository\Product
+     * @return ProductMapper
      */
-    protected function getProductRepository(): Model\Repository\Product
+    public static function getProductRepository(): ProductMapper
     {
-        return new Model\Repository\Product();
+        return new ProductMapper(new RepositoryAdapter());
     }
 
     /**
