@@ -31,21 +31,21 @@ class UserMapper extends Mapper
 
         } catch (EmptyCacheException $e) {
 
-            $data = $this->adapter->find([
+            $userData = $this->adapter->find([
                 'class' => \Model\Repository\UserRepository::class,
-                'params' => [
-                    [
-                        'method' => 'getById',
-                        'value' => $id
+                'method' => [
+                    'name' => 'getById',
+                    'params' => [
+                        $id
                     ]
                 ]
             ]);
 
-            if (!$data) {
+            if (!$userData) {
                 throw new Exception("Пользователь с ID {$id} не найден");
             }
 
-            $user = $this->UserFactory($data);
+            $user = $this->UserFactory($userData);
 
             $this->setInCache($user);
 
@@ -63,10 +63,10 @@ class UserMapper extends Mapper
     {
         $userId = $this->adapter->find([
             'class' => \Model\Repository\UserRepository::class,
-            'params' => [
-                [
-                    'method' => 'getIdByLogin',
-                    'value' => $login
+            'method' => [
+                'name' => 'getIdByLogin',
+                'params' => [
+                    $login
                 ]
             ]
         ]);

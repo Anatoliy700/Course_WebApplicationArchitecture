@@ -14,23 +14,17 @@ class RepositoryAdapter implements IDbAdapter
      */
     public function find(array $params): ?array
     {
-        if (!isset($params['class'])) {
-            throw new \InvalidArgumentException('Не найден класс репозитория');
-        }
-
-        $reflection = new \ReflectionClass($params['class']);
-        if (!isset($params['params']) || !count($params['params'])) {
+        if (!isset($params['class']) || !isset($params['method'])) {
             throw new \InvalidArgumentException('Переданы не корректные параметры');
         }
 
-        $param = $params['params'][0];
-        $methodName = $param['method'];
-        if (!$reflection->hasMethod($methodName)) {
-            throw new \InvalidArgumentException('Не найден метод репозитория');
+        try {
+            $object = (new \ReflectionClass($params['class']))->newInstance();
+            $methodReflection = new \ReflectionMethod($object, $params['method']['name']);
+        } catch (\ReflectionException $e) {
+            throw new \InvalidArgumentException('Не найден класс или метод репозитория');
         }
 
-        $class = $reflection->newInstance();
-
-        return $class->$methodName($param['value']);
+        return $methodReflection->invokeArgs($object, $params['method']['params']);
     }
 }

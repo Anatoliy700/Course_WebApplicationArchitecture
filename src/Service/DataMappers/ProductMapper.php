@@ -36,22 +36,22 @@ class ProductMapper extends Mapper
         }
 
         if (count($noCachedIds)) {
-            $items = $this->adapter->find([
+            $productsData = $this->adapter->find([
                 'class' => ProductRepository::class,
-                'params' => [
-                    [
-                        'method' => 'find',
-                        'value' => $noCachedIds
+                'method' => [
+                    'name' => 'find',
+                    'params' => [
+                        $noCachedIds,
                     ]
                 ]
             ]);
 
 
-            if (!$items) {
+            if (!$productsData) {
                 throw new \Exception('Продукты не найдены');
             }
 
-            $noCachedProducts = $this->createProducts($items);
+            $noCachedProducts = $this->createProducts($productsData);
 
             foreach ($noCachedProducts as $product) {
                 $this->setInCache($product);
@@ -69,11 +69,9 @@ class ProductMapper extends Mapper
     {
         $productIds = $this->adapter->find([
             'class' => ProductRepository::class,
-            'params' => [
-                [
-                    'method' => 'getAllProductIds',
-                    'value' => []
-                ]
+            'method' => [
+                'name' => 'getAllProductIds',
+                'params' => []
             ]
         ]);
         if (count($productIds)) {
