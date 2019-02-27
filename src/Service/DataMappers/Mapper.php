@@ -52,4 +52,98 @@ abstract class Mapper
         $this->identityMap->add($object);
     }
 
+    /**
+     * Создает экземпляр класса
+     *
+     * @param array $data
+     * @return IDomainObject
+     */
+    protected function objectFactory(array $data): IDomainObject
+    {
+        /**
+         * Если переданный метод сеттер, то возвращает имя свойства, которому он устанавливает занчение,
+         * иначе возвращает NULL
+         *
+         * @param string $setterName
+         * @return string|null
+         */
+        $getPropertyNameFromSetterMethod = function (string $setterName): ?string {
+            if (preg_match('#^set([A-Z][a-z]*)$#', $setterName, $matches)) {
+
+                return strtolower($matches[1]);
+            }
+
+            return null;
+        };
+
+        /**
+         * Проверяет является ли переданный метод сеттером
+         *
+         * @param string $setterName
+         * @return bool
+         */
+        $isSetterMethod = function (string $setterName) use ($getPropertyNameFromSetterMethod): bool {
+            return (bool)$getPropertyNameFromSetterMethod($setterName);
+        };
+
+        /**
+         * Устанавливает значения свойств объекта через сеттеры или конструктор
+         *
+         * @param IDomainObject $object
+         * @param \ReflectionMethod $method
+         * @param array $data
+         */
+        $setPropertiesObject = function (
+            IDomainObject $object,
+            \ReflectionMethod $method,
+            array $data
+        ) use ($getPropertyNameFromSetterMethod) {
+
+            $params = [];
+
+            /** @var \ReflectionParameter $parameter */
+            foreach ($method->getParameters() as $parameter) {
+
+                if (!$parameter->getClass()) {
+
+                    $params[] = $data[$getPropertyNameFromSetterMethod($method->getName()) ?: $parameter->getName()];
+
+                } else {
+
+                    $nameClass = $parameter->getClass()->getName();
+                    $shortNameClass = substr($nameClass, strrpos($nameClass, '\\') + 1);
+                    $namespace = (new \ReflectionClass($this))->getNamespaceName();
+                    $mapperClass = $namespace . '\\' . $shortNameClass . 'Mapper';
+                    $mapper = new $mapperClass($this->adapter);
+                    $params[] = $mapper->getById($data[strtolower($shortNameClass) . '_id']);
+                }
+            }
+
+            $method->invokeArgs($object, $params);
+        };
+
+        try {
+            $reflectionClass = new \ReflectionClass($this->getEntityClass());
+
+            /** @var IDomainObject $object */
+            $object = $reflectionClass->newInstanceWithoutConstructor();
+
+            $constructor = $reflectionClass->getConstructor();
+            if ($constructor && count($constructor->getParameters())) {
+                $setPropertiesObject($object, $constructor, $data);
+            }
+
+            $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
+            foreach ($methods as $method) {
+
+                if ($isSetterMethod($method->getName())) {
+                    $setPropertiesObject($object, $method, $data);
+                }
+            }
+
+            return $object;
+
+        } catch (\ReflectionException $e) { //TODO: Реализовать обработку исключения
+        }
+    }
 }

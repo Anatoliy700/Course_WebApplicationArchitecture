@@ -4,8 +4,8 @@ namespace Service\DataMappers;
 
 
 use Exception;
-use Model\Entity\Role;
 use Model\Entity\User;
+use Service\Adapters\RepositoryAdapter;
 use Service\DbService\Exceptions\EmptyCacheException;
 
 class UserMapper extends Mapper
@@ -45,7 +45,7 @@ class UserMapper extends Mapper
                 throw new Exception("Пользователь с ID {$id} не найден");
             }
 
-            $user = $this->UserFactory($userData);
+            $user = $this->objectFactory($userData);
 
             $this->setInCache($user);
 
@@ -76,22 +76,5 @@ class UserMapper extends Mapper
         }
 
         return $this->getById($userId[0]);
-    }
-
-    /**
-     * @param array $user
-     * @return User
-     */
-    protected function UserFactory(array $user): User
-    {
-        $role = $user['role'];
-
-        return new User(
-            $user['id'],
-            $user['name'],
-            $user['login'],
-            $user['password'],
-            new Role($role['id'], $role['title'], $role['role'])
-        );
     }
 }

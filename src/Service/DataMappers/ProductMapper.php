@@ -88,24 +88,9 @@ class ProductMapper extends Mapper
         $products = [];
 
         foreach ($items as $item) {
-            $products[] = $this->productFactory($item);
+            $products[] = $this->objectFactory($item);
         }
 
         return $products;
-    }
-
-    /**
-     * @param array $item
-     * @return Product
-     */
-    protected function productFactory(array $item): Product
-    {
-        $product = new Product();
-        $product
-            ->setId($item['id'])
-            ->setName($item['name'])
-            ->setPrice($item['price']);
-
-        return $product;
     }
 }
