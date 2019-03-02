@@ -6,13 +6,29 @@ namespace Service\DataMappers;
 use Model\Entity\Product;
 use Model\Repository\ProductRepository;
 use Service\DbService\Exceptions\EmptyCacheException;
+use Service\DbService\Interfaces\IDomainObject;
 
 class ProductMapper extends Mapper
 {
+    /**
+     * @return string
+     */
     protected function getEntityClass(): string
     {
         return Product::class;
     }
+
+    /**
+     * @param int $id
+     * @return IDomainObject|null
+     * @throws \Exception
+     */
+    public function getById(int $id): ?IDomainObject
+    {
+        $object = $this->search([$id]);
+        return $object[0] ?: null;
+    }
+
 
     /**
      * @param array $ids

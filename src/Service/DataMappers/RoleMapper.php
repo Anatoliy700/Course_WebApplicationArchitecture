@@ -6,6 +6,7 @@ namespace Service\DataMappers;
 use Model\Entity\Role;
 use Model\Repository\RoleRepository;
 use Service\DbService\Exceptions\EmptyCacheException;
+use Service\DbService\Interfaces\IDomainObject;
 
 class RoleMapper extends Mapper
 {
@@ -19,10 +20,10 @@ class RoleMapper extends Mapper
 
     /**
      * @param int $id
-     * @return Role|\Service\DbService\Interfaces\IDomainObject
+     * @return Role|\Service\DbService\Interfaces\IDomainObject|null
      * @throws \Exception
      */
-    public function getById(int $id)
+    public function getById(int $id): ?IDomainObject
     {
         try {
             $role = $this->getFromCache($id);

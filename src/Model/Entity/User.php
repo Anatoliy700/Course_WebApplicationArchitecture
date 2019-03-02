@@ -84,7 +84,7 @@ class User implements IDomainObject
     /**
      * @return Role
      */
-    public function getRole(): Role
+    public function getRole()
     {
         return $this->role;
     }

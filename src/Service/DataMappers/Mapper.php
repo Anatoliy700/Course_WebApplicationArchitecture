@@ -3,11 +3,13 @@
 namespace Service\DataMappers;
 
 use Service\Adapters\Interfaces\IDbAdapter;
+use Service\DataMappers\Interfaces\IMapper;
 use Service\DbService\IdentityMap;
 use Service\DbService\Interfaces\IDomainObject;
+use Service\LazyLoad\ValueHolder;
 
 
-abstract class Mapper
+abstract class Mapper implements IMapper
 {
     /**
      * @var IDbAdapter
@@ -110,16 +112,35 @@ abstract class Mapper
 
                 } else {
 
-                    $nameClass = $parameter->getClass()->getName();
-                    $shortNameClass = substr($nameClass, strrpos($nameClass, '\\') + 1);
-                    $namespace = (new \ReflectionClass($this))->getNamespaceName();
-                    $mapperClass = $namespace . '\\' . $shortNameClass . 'Mapper';
-                    $mapper = new $mapperClass($this->adapter);
-                    $params[] = $mapper->getById($data[strtolower($shortNameClass) . '_id']);
+                    try {
+                        $reflectClass = $parameter->getClass();
+                        $nameClass = $reflectClass->getName();
+                        $shortNameClass = substr($nameClass, strrpos($nameClass, '\\') + 1);
+                        $namespace = (new \ReflectionClass($this))->getNamespaceName();
+                        $mapperClass = $namespace . '\\' . $shortNameClass . 'Mapper';
+                        $mapper = new $mapperClass($this->adapter);
+                        $argObject = $reflectClass->newInstanceWithoutConstructor();
+                        $argObjectProperty = $reflectClass->getProperty('id');
+                        if (!$argObjectProperty->isPublic()) {
+                            $argObjectProperty->setAccessible(true);
+                        }
+                        $argObjectProperty->setValue($argObject, $data[strtolower($shortNameClass) . '_id']);
+                        $params[] = $argObject;
+                        $lazyParams = [
+                            $object,
+                            $mapper,
+                            (new \ReflectionClass($method->class))->getProperty(strtolower($shortNameClass))
+                        ];
+                    } catch (\ReflectionException $e) {
+                        //TODO: Реализовать обработку исключения
+                    }
                 }
             }
 
             $method->invokeArgs($object, $params);
+            if (isset($lazyParams)) {
+                ValueHolder::setLazyLoad(...$lazyParams);
+            }
         };
 
         try {
@@ -143,7 +164,9 @@ abstract class Mapper
 
             return $object;
 
-        } catch (\ReflectionException $e) { //TODO: Реализовать обработку исключения
+        } catch (\ReflectionException $e) {
+
+            //TODO: Реализовать обработку исключения
         }
     }
 }

@@ -5,8 +5,8 @@ namespace Service\DataMappers;
 
 use Exception;
 use Model\Entity\User;
-use Service\Adapters\RepositoryAdapter;
 use Service\DbService\Exceptions\EmptyCacheException;
+use Service\DbService\Interfaces\IDomainObject;
 
 class UserMapper extends Mapper
 {
@@ -20,10 +20,10 @@ class UserMapper extends Mapper
 
     /**
      * @param int $id
-     * @return User
+     * @return User|null
      * @throws Exception
      */
-    public function getById(int $id): User
+    public function getById(int $id): ?IDomainObject
     {
         try {
 
@@ -56,10 +56,10 @@ class UserMapper extends Mapper
 
     /**
      * @param string $login
-     * @return User
+     * @return User|null
      * @throws Exception
      */
-    public function getByLogin(string $login): User
+    public function getByLogin(string $login): ?User
     {
         $userId = $this->adapter->find([
             'class' => \Model\Repository\UserRepository::class,
