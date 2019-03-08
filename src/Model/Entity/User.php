@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 namespace Model\Entity;
 
-class User
+use Service\DbService\Interfaces\IDomainObject;
+
+class User implements IDomainObject
 {
     /**
      * @var int
@@ -82,7 +84,7 @@ class User
     /**
      * @return Role
      */
-    public function getRole(): Role
+    public function getRole()
     {
         return $this->role;
     }

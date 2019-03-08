@@ -32,7 +32,7 @@ class ControllerFacade
         } catch (ResourceNotFoundException $e) {
             $response = new Response('Page not found. 404', Response::HTTP_NOT_FOUND);
         } catch (\Throwable $e) {
-            $error = 'Server error occurred. 500';
+            $error = 'Server error occurred. 500 <br>' . $e->getMessage();
             if (Registry::getDataConfig('environment') === 'dev') {
                 $error .= '<pre>' . $e->getTraceAsString() . '</pre>';
             }

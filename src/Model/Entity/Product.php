@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 namespace Model\Entity;
 
-class Product
+use Service\DbService\Interfaces\IDomainObject;
+
+class Product implements IDomainObject
 {
     /**
      * @var int

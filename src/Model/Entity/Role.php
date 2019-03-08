@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 namespace Model\Entity;
 
-class Role
+use Service\DbService\Interfaces\IDomainObject;
+
+class Role implements IDomainObject
 {
     /**
      * @var int

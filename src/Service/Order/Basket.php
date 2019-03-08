@@ -6,7 +6,9 @@ namespace Service\Order;
 
 use Model;
 use Model\Repository\Interfaces\IBasket;
+use Service\Adapters\RepositoryAdapter;
 use Service\Commands\Interfaces\IBasketCheckout;
+use Service\Product\Product;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class Basket implements IBasketCheckout
@@ -92,11 +94,10 @@ class Basket implements IBasketCheckout
     /**
      * Фабричный метод для репозитория Product
      *
-     * @return Model\Repository\Product
      */
-    protected function getProductRepository(): Model\Repository\Product
+    protected function getProductRepository()
     {
-        return new Model\Repository\Product();
+        return Product::getProductRepository();
     }
 
     /**

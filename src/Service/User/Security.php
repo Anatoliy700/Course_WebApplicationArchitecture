@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Service\User;
 
 use Model;
+use Service\Adapters\RepositoryAdapter;
+use Service\DataMappers\UserMapper;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class Security implements ISecurity
@@ -28,7 +30,7 @@ class Security implements ISecurity
     {
         $userId = $this->session->get(self::SESSION_USER_IDENTITY);
 
-        return $userId ? (new Model\Repository\User())->getById($userId) : null;
+        return $userId ? ($this->getUserRepository())->getById($userId) : null;
     }
 
     /**
@@ -74,10 +76,10 @@ class Security implements ISecurity
     /**
      * Фабричный метод для репозитория User
      *
-     * @return Model\Repository\User
+     * @return UserMapper
      */
-    protected function getUserRepository(): Model\Repository\User
+    protected function getUserRepository(): UserMapper
     {
-        return new Model\Repository\User();
+        return new UserMapper(new RepositoryAdapter());
     }
 }
